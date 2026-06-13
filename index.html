@@ -460,6 +460,41 @@ function togglePassVis(inputId, btn) {
 
 const ll = new LinkedList();
 const undoStack = new Stack();
+const STORAGE_KEY = "securevault_data";
+
+function saveData() {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(ll.toArray())
+  );
+}
+
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+
+  if (!raw) return;
+
+  const data = JSON.parse(raw);
+
+  ll.head = null;
+  ll.size = 0;
+
+  data.reverse().forEach(item => {
+    const node = new Node(
+      item.service,
+      item.username,
+      decrypt(item.password),
+      item.category
+    );
+
+    node.id = item.id;
+    node.password = item.password;
+
+    node.next = ll.head;
+    ll.head = node;
+    ll.size++;
+  });
+}
 
 // ============================================================
 // RENDER FUNCTIONS
@@ -559,6 +594,7 @@ function insertNode() {
   document.getElementById('in-pass').value = '';
   document.getElementById('strength-wrap').style.display = 'none';
   renderAll();
+  saveData();
   showTab('list');
 }
 
@@ -569,6 +605,7 @@ function deleteNode(id, service) {
     undoStack.push({ type: 'DELETE', service, node, time: new Date().toLocaleTimeString('id-ID') });
     showAlert(`Akun "${service}" dihapus. Bisa di-undo!`, 'success');
     renderAll();
+    saveData();
   }
 }
 
@@ -582,6 +619,7 @@ function editPass(id, service) {
     node.password = encrypt(newPass);
     showAlert(`Password "${service}" berhasil diperbarui!`, 'success');
     renderAll();
+    saveData();
   }
 }
 
@@ -603,6 +641,7 @@ function undoAction() {
     if (node) { node.password = action.oldPass; showAlert(`Undo: Password "${action.service}" dikembalikan!`, 'success'); }
   }
   renderAll();
+  saveData();
 }
 
 function clearStack() {
@@ -706,12 +745,13 @@ function escHtml(str) {
 // ============================================================
 // INIT — demo data
 // ============================================================
-ll.insert('Gmail', 'user@gmail.com', 'Gmail@2024!', 'email');
-ll.insert('Instagram', 'user_insta', 'Insta#Secure9', 'sosmed');
-ll.insert('BCA Mobile', 'user_bca', 'BcaBank$321', 'finance');
-undoStack.push({ type: 'INSERT', service: 'Gmail', time: '08:00:00' });
-undoStack.push({ type: 'INSERT', service: 'Instagram', time: '08:01:00' });
-undoStack.push({ type: 'INSERT', service: 'BCA Mobile', time: '08:02:00' });
+loadData();
+
+if (ll.size === 0) {
+  ll.insert('Gmail', 'user@gmail.com', 'Gmail@2024!', 'email');
+  saveData();
+}
+
 renderAll();
 </script>
 </body>
