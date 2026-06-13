@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureVault — Password Manager</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b27;
+    --bg3: #1e2535;
+    --border: rgba(99,120,180,0.18);
+    --border2: rgba(99,120,180,0.32);
+    --text: #e8eaf6;
+    --text2: #8892b0;
+    --text3: #4a5568;
+    --blue: #4f8ef7;
+    --blue2: #2563eb;
+    --blue-bg: rgba(79,142,247,0.10);
+    --green: #34d399;
+    --green-bg: rgba(52,211,153,0.10);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.10);
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.10);
+    --purple: #a78bfa;
+    --purple-bg: rgba(167,139,250,0.10);
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* LAYOUT */
+  .container { max-width: 820px; margin: 0 auto; padding: 2rem 1rem; }
+  .header { display: flex; align-items: center; gap: 16px; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .logo { width: 48px; height: 48px; background: linear-gradient(135deg, #2563eb, #4f8ef7); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; flex-shrink: 0; }
+  .header-info h1 { font-size: 20px; font-weight: 600; color: var(--text); }
+  .header-info p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .header-stats { margin-left: auto; display: flex; gap: 20px; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 22px; font-weight: 600; color: var(--blue); }
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; background: var(--bg2); padding: 6px; border-radius: var(--radius); border: 1px solid var(--border); flex-wrap: wrap; }
+  .tab { flex: 1; min-width: 100px; padding: 9px 14px; border-radius: 8px; border: none; background: transparent; cursor: pointer; font-size: 13px; color: var(--text2); transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+  .tab:hover { background: var(--bg3); color: var(--text); }
+  .tab.active { background: var(--blue2); color: #fff; font-weight: 500; }
+
+  /* CARDS */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .card-title i { font-size: 15px; color: var(--blue); }
+
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+  input, select { width: 100%; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14px; outline: none; transition: border .2s; }
+  input:focus, select:focus { border-color: var(--blue); }
+  input::placeholder { color: var(--text3); }
+  select option { background: var(--bg2); }
+
+  /* BUTTONS */
+  .btn { padding: 10px 18px; border-radius: var(--radius); border: 1px solid var(--border2); background: transparent; cursor: pointer; font-size: 14px; color: var(--text); transition: all .15s; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .btn:hover { background: var(--bg3); }
+  .btn.primary { background: var(--blue2); border-color: var(--blue2); color: #fff; }
+  .btn.primary:hover { background: #1d4ed8; }
+  .btn.success { border-color: var(--green); color: var(--green); }
+  .btn.success:hover { background: var(--green-bg); }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+  .btn.danger:hover { background: var(--red-bg); }
+  .btn.sm { padding: 7px 12px; font-size: 13px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+  /* ALERTS */
+  #alert-box { position: fixed; top: 20px; right: 20px; padding: 12px 18px; border-radius: var(--radius); font-size: 14px; display: none; align-items: center; gap: 10px; z-index: 999; max-width: 320px; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+  .alert-success { background: #064e3b; border: 1px solid var(--green); color: var(--green); }
+  .alert-danger { background: #7f1d1d; border: 1px solid var(--red); color: #fca5a5; }
+
+  /* ENTRY ITEMS */
+  .entry-list { display: flex; flex-direction: column; gap: 8px; }
+  .entry-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 14px; transition: border .2s; }
+  .entry-item:hover { border-color: var(--border2); }
+  .entry-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .entry-info { flex: 1; min-width: 0; }
+  .entry-name { font-size: 15px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .entry-meta { font-size: 13px; color: var(--text2); margin-top: 3px; }
+  .entry-enc { font-size: 12px; font-family: 'Courier New', monospace; color: var(--text3); margin-top: 4px; }
+  .entry-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); transition: all .15s; }
+  .icon-btn:hover { background: var(--bg2); color: var(--text); border-color: var(--border2); }
+  .icon-btn.del:hover { color: var(--red); border-color: var(--red); }
+
+  /* BADGES */
+  .badge { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 600; display: inline-block; }
+
+  /* STRENGTH */
+  .strength-wrap { margin-bottom: 12px; }
+  .strength-track { height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .strength-fill { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
+
+  /* STACK VIS */
+  .stack-list { display: flex; flex-direction: column; gap: 6px; }
+  .stack-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; font-family: 'Courier New', monospace; color: var(--text2); display: flex; align-items: center; gap: 10px; }
+  .stack-item.top { border-color: var(--blue); color: var(--text); }
+  .stack-top-label { background: var(--blue2); color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  /* NODE VIS */
+  .node-vis { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 10px 0; }
+  .node-box { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 8px 14px; font-size: 12px; font-family: 'Courier New', monospace; text-align: center; }
+  .node-box.head { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); font-weight: 700; }
+  .node-arr { color: var(--text3); font-size: 18px; }
+  .node-null { font-family: 'Courier New', monospace; color: var(--text3); font-size: 12px; }
+
+  /* CODE BLOCK */
+  .code-block { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; font-family: 'Courier New', monospace; font-size: 12px; color: var(--text2); white-space: pre; overflow-x: auto; line-height: 1.7; }
+  .code-kw { color: #c792ea; }
+  .code-fn { color: #82aaff; }
+  .code-str { color: #c3e88d; }
+  .code-cm { color: #546e7a; }
+
+  /* SEARCH */
+  .search-result { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .empty-state { text-align: center; padding: 2rem; color: var(--text3); font-size: 14px; }
+  .empty-state i { font-size: 32px; display: block; margin-bottom: 10px; }
+
+  /* PASSWORD REVEAL */
+  .pass-wrap { position: relative; }
+  .pass-wrap input { padding-right: 44px; }
+  .pass-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text2); cursor: pointer; font-size: 18px; padding: 4px; }
+
+  /* COMPLEXITY TABLE */
+  .complexity-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .complexity-table th { text-align: left; padding: 8px 12px; color: var(--text2); font-weight: 600; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+  .complexity-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+  .complexity-table tr:last-child td { border-bottom: none; }
+  .o-green { color: var(--green); font-family: 'Courier New', monospace; font-weight: 700; }
+  .o-amber { color: var(--amber); font-family: 'Courier New', monospace; font-weight: 700; }
+  .reveal-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 14px; padding: 0 4px; vertical-align: middle; transition: color .15s; line-height: 1; }
+  .reveal-btn:hover { color: var(--blue); }
+  .reveal-btn.active { color: var(--amber); }
+  .enc-val { font-family: 'Courier New', monospace; font-size: 12px; }
+  .enc-plain { color: var(--green); font-family: 'Courier New', monospace; font-size: 12px; font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .header-stats { display: none; }
+    .tabs { gap: 4px; }
+    .tab { font-size: 12px; padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-box"></div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo"><i class="ti ti-shield-lock"></i></div>
+    <div class="header-info">
+      <h1>SecureVault</h1>
+      <p>Password Manager — Implementasi Linked List & Stack</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat">
+        <div class="stat-num" id="stat-count">0</div>
+        <div class="stat-label">Akun</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-stack">0</div>
+        <div class="stat-label">Riwayat</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('list')"><i class="ti ti-list-details"></i> Daftar Akun</button>
+    <button class="tab" onclick="showTab('add')"><i class="ti ti-plus"></i> Tambah</button>
+    <button class="tab" onclick="showTab('search')"><i class="ti ti-search"></i> Cari</button>
+    <button class="tab" onclick="showTab('undo')"><i class="ti ti-history"></i> Undo / Stack</button>
+    <button class="tab" onclick="showTab('viz')"><i class="ti ti-sitemap"></i> Struktur Data</button>
+  </div>
+
+  <!-- TAB: LIST -->
+  <div id="page-list">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-database"></i> Linked List — Traversal Semua Node</div>
+      <div id="entry-list" class="entry-list">
+        <div class="empty-state"><i class="ti ti-lock-open"></i>Belum ada akun tersimpan.<br>Tambahkan akun baru di tab Tambah.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: ADD -->
+  <div id="page-add" style="display:none">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-plus"></i> Insert Node Baru ke Linked List</div>
+      <div class="form-grid">
+        <input type="text" id="in-service" placeholder="Nama Layanan (cth: Gmail)">
+        <input type="text" id="in-user" placeholder="Username / Email">
+      </div>
+      <div class="form-grid">
+        <div class="pass-wrap">
+          <input type="password" id="in-pass" placeholder="Password" oninput="checkStrength()">
+          <button class="pass-toggle" onclick="togglePassVis('in-pass', this)" title="Tampilkan password"><i class="ti ti-eye"></i></button>
+        </div>
+        <select id="in-cat">
+          <option value="email">Email</option>
+          <option value="sosmed">Media Sosial</option>
+          <option value="finance">Keuangan / Banking</option>
+          <option value="work">Pekerjaan</option>
+          <option value="other">Lainnya</option>
+        </select>
+      </div>
+      <div id="strength-wrap" class="strength-wrap" style="display:none">
+        <div style="font-size:13px;color:var(--text2)">Kekuatan: <span id="strength-label" style="font-weight:600">-</span></div>
+        <div class="strength-track"><div id="strength-fill" class="strength-fill" style="width:0%"></div></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="generatePass()"><i class="ti ti-refresh"></i> Generate Password</button>
+        <button class="btn primary" onclick="insertNode()"><i class="ti ti-plus"></i> Tambah Akun</button>
+      </div>
+      <div style="margin-top:14px;background:var(--bg3);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--text2)">
+        <i class="ti ti-info-circle" style="color:var(--blue)"></i>
+        Password dienkripsi dengan <strong>Caesar Cipher ROT13</strong> sebelum disimpan ke node Linked List.
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: SEARCH -->
+  <div id="page-search" style="display:none">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-search"></i> Traversal Linear — Pencarian Node</div>
+      <input type="text" id="in-search" placeholder="Ketik nama layanan untuk mencari..." oninput="searchNode()">
+      <div id="search-result" class="search-result"></div>
+      <div style="margin-top:14px;font-size:13px;color:var(--text3)">
+        <i class="ti ti-arrow-right" style="color:var(--blue)"></i>
+        Algoritma: traversal dari HEAD node satu per satu hingga menemukan kecocokan — O(n).
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: UNDO -->
+  <div id="page-undo" style="display:none">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-stack"></i> Stack Riwayat Aksi (LIFO)</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;flex-wrap:wrap">
+        <button class="btn success" onclick="undoAction()"><i class="ti ti-corner-up-left"></i> Undo — Pop Stack</button>
+        <button class="btn danger sm" onclick="clearStack()"><i class="ti ti-trash"></i> Clear Stack</button>
+        <span style="font-size:13px;color:var(--text2)">Stack size: <strong id="stack-size-label">0</strong></span>
+      </div>
+      <div id="stack-vis" class="stack-list">
+        <div class="empty-state"><i class="ti ti-stack-2"></i>Stack kosong — lakukan aksi dulu.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: VIZ -->
+  <div id="page-viz" style="display:none">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-hierarchy"></i> Visualisasi Linked List</div>
+      <div id="ll-viz" class="node-vis">
+        <span class="node-null">HEAD → null</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-clock"></i> Kompleksitas Waktu</div>
+      <table class="complexity-table">
+        <thead><tr><th>Operasi</th><th>Struktur Data</th><th>Kompleksitas</th><th>Keterangan</th></tr></thead>
+        <tbody>
+          <tr><td>Insert (tambah akun)</td><td>Linked List</td><td class="o-green">O(1)</td><td>Sisip di HEAD</td></tr>
+          <tr><td>Delete (hapus akun)</td><td>Linked List</td><td class="o-amber">O(n)</td><td>Traversal cari node</td></tr>
+          <tr><td>Search (cari akun)</td><td>Linked List</td><td class="o-amber">O(n)</td><td>Traversal linear</td></tr>
+          <tr><td>Push (catat aksi)</td><td>Stack</td><td class="o-green">O(1)</td><td>Append ke top</td></tr>
+          <tr><td>Pop (undo aksi)</td><td>Stack</td><td class="o-green">O(1)</td><td>Remove dari top</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-code"></i> Pseudocode Linked List</div>
+      <div class="code-block"><span class="code-cm">// Struktur Node</span>
+<span class="code-kw">class</span> <span class="code-fn">Node</span> {
+  service   : String
+  username  : String
+  password  : String   <span class="code-cm">// tersimpan dalam bentuk terenkripsi</span>
+  category  : String
+  next      : Node | <span class="code-kw">null</span>
+}
+
+<span class="code-cm">// Insert — O(1), sisip di HEAD</span>
+<span class="code-fn">insert</span>(service, user, pass, cat):
+  newNode = <span class="code-kw">new</span> Node(service, user, <span class="code-fn">encrypt</span>(pass), cat)
+  newNode.next = head
+  head = newNode
+
+<span class="code-cm">// Delete — O(n), cari lalu hapus node</span>
+<span class="code-fn">delete</span>(id):
+  prev = <span class="code-kw">null</span>, cur = head
+  <span class="code-kw">while</span> cur != <span class="code-kw">null</span>:
+    <span class="code-kw">if</span> cur.id == id:
+      <span class="code-kw">if</span> prev == <span class="code-kw">null</span>: head = cur.next
+      <span class="code-kw">else</span>: prev.next = cur.next
+      <span class="code-kw">return</span> cur
+    prev = cur; cur = cur.next</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-code"></i> Pseudocode Stack (Undo)</div>
+      <div class="code-block"><span class="code-cm">// Struktur Stack — prinsip LIFO</span>
+<span class="code-kw">class</span> <span class="code-fn">Stack</span> {
+  items : Array
+}
+
+<span class="code-cm">// Push — O(1), tambah ke top</span>
+<span class="code-fn">push</span>(action):
+  items.<span class="code-fn">append</span>(action)
+
+<span class="code-cm">// Pop — O(1), ambil dari top (LIFO)</span>
+<span class="code-fn">pop</span>():
+  <span class="code-kw">if</span> items.isEmpty(): <span class="code-kw">return</span> <span class="code-kw">null</span>
+  <span class="code-kw">return</span> items.<span class="code-fn">removeLast</span>()
+
+<span class="code-cm">// Enkripsi Caesar Cipher ROT13</span>
+<span class="code-fn">encrypt</span>(text):
+  <span class="code-kw">for each</span> char <span class="code-kw">in</span> text:
+    <span class="code-kw">if</span> isAlpha(char):
+      shift char <span class="code-kw">by</span> 13 positions
+  <span class="code-kw">return</span> encryptedText</div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ============================================================
+// DATA STRUCTURES
+// ============================================================
+
+class Node {
+  constructor(service, username, password, category) {
+    this.id = 'n' + Date.now() + Math.floor(Math.random() * 10000);
+    this.service = service;
+    this.username = username;
+    this.password = password;
+    this.category = category;
+    this.next = null;
+  }
+}
+
+class LinkedList {
+  constructor() { this.head = null; this.size = 0; }
+
+  insert(service, username, password, category) {
+    const n = new Node(service, username, encrypt(password), category);
+    n.next = this.head;
+    this.head = n;
+    this.size++;
+    return n;
+  }
+
+  delete(id) {
+    if (!this.head) return null;
+    if (String(this.head.id) === String(id)) {
+      const r = this.head;
+      this.head = this.head.next;
+      this.size--;
+      return r;
+    }
+    let cur = this.head;
+    while (cur.next) {
+      if (String(cur.next.id) === String(id)) {
+        const r = cur.next;
+        cur.next = r.next;
+        this.size--;
+        return r;
+      }
+      cur = cur.next;
+    }
+    return null;
+  }
+
+  search(q) {
+    const res = [];
+    let cur = this.head;
+    while (cur) {
+      if (cur.service.toLowerCase().includes(q.toLowerCase()) ||
+          cur.username.toLowerCase().includes(q.toLowerCase())) res.push(cur);
+      cur = cur.next;
+    }
+    return res;
+  }
+
+  toArray() {
+    const a = [];
+    let cur = this.head;
+    while (cur) { a.push(cur); cur = cur.next; }
+    return a;
+  }
+}
+
+class Stack {
+  constructor() { this.items = []; }
+  push(action) { this.items.push(action); }
+  pop() { return this.items.length ? this.items.pop() : null; }
+  peek() { return this.items[this.items.length - 1]; }
+  isEmpty() { return this.items.length === 0; }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+
+function encrypt(text) {
+  return text.split('').map(c => {
+    if (c >= 'a' && c <= 'z') return String.fromCharCode(((c.charCodeAt(0) - 97 + 13) % 26) + 97);
+    if (c >= 'A' && c <= 'Z') return String.fromCharCode(((c.charCodeAt(0) - 65 + 13) % 26) + 65);
+    return c;
+  }).join('');
+}
+
+function decrypt(text) { return encrypt(text); } // ROT13 is symmetric
+
+const catConfig = {
+  email:   { bg: 'rgba(79,142,247,0.15)', color: '#4f8ef7', label: 'Email' },
+  sosmed:  { bg: 'rgba(167,139,250,0.15)', color: '#a78bfa', label: 'Sosmed' },
+  finance: { bg: 'rgba(251,191,36,0.15)', color: '#fbbf24', label: 'Keuangan' },
+  work:    { bg: 'rgba(52,211,153,0.15)', color: '#34d399', label: 'Pekerjaan' },
+  other:   { bg: 'rgba(148,163,184,0.15)', color: '#94a3b8', label: 'Lainnya' }
+};
+
+function getInitial(s) { return s.substring(0, 2).toUpperCase(); }
+
+function showAlert(msg, type) {
+  const el = document.getElementById('alert-box');
+  el.className = 'alert-' + type;
+  el.style.cssText = `display:flex;position:fixed;top:20px;right:20px;padding:12px 18px;border-radius:10px;font-size:14px;align-items:center;gap:10px;z-index:999;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,.5);${type==='success'?'background:#064e3b;border:1px solid #34d399;color:#34d399':'background:#7f1d1d;border:1px solid #f87171;color:#fca5a5'}`;
+  el.innerHTML = `<i class="ti ti-${type==='success'?'check':'x'}"></i> ${msg}`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function togglePassVis(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.innerHTML = '<i class="ti ti-eye-off"></i>';
+  } else {
+    inp.type = 'password';
+    btn.innerHTML = '<i class="ti ti-eye"></i>';
+  }
+}
+
+// ============================================================
+// STATE
+// ============================================================
+
+const ll = new LinkedList();
+const undoStack = new Stack();
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+
+function renderAll() {
+  renderList();
+  renderStack();
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('stat-count').textContent = ll.size;
+  document.getElementById('stat-stack').textContent = undoStack.items.length;
+  document.getElementById('stack-size-label').textContent = undoStack.items.length;
+}
+
+function renderList() {
+  const el = document.getElementById('entry-list');
+  const nodes = ll.toArray();
+  if (!nodes.length) {
+    el.innerHTML = '<div class="empty-state"><i class="ti ti-lock-open"></i>Belum ada akun tersimpan.<br>Tambahkan akun baru di tab Tambah.</div>';
+    return;
+  }
+  el.innerHTML = nodes.map(n => {
+    const c = catConfig[n.category] || catConfig.other;
+    return `<div class="entry-item">
+      <div class="entry-avatar" style="background:${c.bg};color:${c.color}">${getInitial(n.service)}</div>
+      <div class="entry-info">
+        <div class="entry-name">${escHtml(n.service)}
+          <span class="badge" style="background:${c.bg};color:${c.color}">${c.label}</span>
+        </div>
+        <div class="entry-meta"><i class="ti ti-user" style="font-size:12px"></i> ${escHtml(n.username)}</div>
+        <div class="entry-enc">
+          <i class="ti ti-lock" style="font-size:11px"></i>
+          <span class="enc-label">Encrypted:</span>
+          <span class="enc-val" id="encval-${n.id}">${escHtml(n.password)}</span>
+          <button class="reveal-btn" data-id="${n.id}" data-enc="${escHtml(n.password)}" data-showing="false" onclick="toggleReveal(this)" title="Lihat password asli"><i class="ti ti-eye"></i></button>
+        </div>
+      </div>
+      <div class="entry-actions">
+        <button class="icon-btn" title="Edit password" data-id="${n.id}" data-service="${escHtml(n.service)}" onclick="editPass(this.dataset.id, this.dataset.service)"><i class="ti ti-edit"></i></button>
+        <button class="icon-btn del" title="Hapus akun" data-id="${n.id}" data-service="${escHtml(n.service)}" onclick="deleteNode(this.dataset.id, this.dataset.service)"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderStack() {
+  const el = document.getElementById('stack-vis');
+  if (undoStack.isEmpty()) {
+    el.innerHTML = '<div class="empty-state"><i class="ti ti-stack-2"></i>Stack kosong — lakukan aksi dulu.</div>';
+    return;
+  }
+  const items = [...undoStack.items].reverse();
+  el.innerHTML = items.map((item, i) => {
+    const icon = item.type === 'INSERT' ? 'ti-plus' : item.type === 'DELETE' ? 'ti-trash' : 'ti-edit';
+    return `<div class="stack-item ${i === 0 ? 'top' : ''}">
+      ${i === 0 ? '<span class="stack-top-label">TOP</span>' : ''}
+      <i class="ti ${icon}" style="font-size:14px"></i>
+      [${item.type}] ${escHtml(item.service)} — ${item.time}
+    </div>`;
+  }).join('');
+  updateStats();
+}
+
+function renderViz() {
+  const el = document.getElementById('ll-viz');
+  const nodes = ll.toArray();
+  if (!nodes.length) {
+    el.innerHTML = '<span class="node-null">HEAD → null (kosong)</span>';
+    return;
+  }
+  let html = '<div class="node-box head">HEAD</div>';
+  nodes.forEach(n => {
+    html += `<span class="node-arr">→</span><div class="node-box" title="${escHtml(n.username)}">${escHtml(n.service)}</div>`;
+  });
+  html += '<span class="node-arr">→</span><span class="node-null">null</span>';
+  el.innerHTML = html;
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
+
+function insertNode() {
+  const s = document.getElementById('in-service').value.trim();
+  const u = document.getElementById('in-user').value.trim();
+  const p = document.getElementById('in-pass').value.trim();
+  const c = document.getElementById('in-cat').value;
+  if (!s || !u || !p) { showAlert('Lengkapi semua field terlebih dahulu!', 'danger'); return; }
+  ll.insert(s, u, p, c);
+  undoStack.push({ type: 'INSERT', service: s, time: new Date().toLocaleTimeString('id-ID') });
+  showAlert(`Akun "${s}" berhasil ditambahkan!`, 'success');
+  document.getElementById('in-service').value = '';
+  document.getElementById('in-user').value = '';
+  document.getElementById('in-pass').value = '';
+  document.getElementById('strength-wrap').style.display = 'none';
+  renderAll();
+  showTab('list');
+}
+
+function deleteNode(id, service) {
+  if (!confirm(`Hapus akun "${service}"?`)) return;
+  const node = ll.delete(id);
+  if (node) {
+    undoStack.push({ type: 'DELETE', service, node, time: new Date().toLocaleTimeString('id-ID') });
+    showAlert(`Akun "${service}" dihapus. Bisa di-undo!`, 'success');
+    renderAll();
+  }
+}
+
+function editPass(id, service) {
+  const newPass = prompt(`Password baru untuk "${service}":`);
+  if (!newPass) return;
+  const node = ll.toArray().find(n => String(n.id) === String(id));
+  if (node) {
+    const oldPass = node.password;
+    undoStack.push({ type: 'EDIT', service, nodeId: id, oldPass, time: new Date().toLocaleTimeString('id-ID') });
+    node.password = encrypt(newPass);
+    showAlert(`Password "${service}" berhasil diperbarui!`, 'success');
+    renderAll();
+  }
+}
+
+function undoAction() {
+  const action = undoStack.pop();
+  if (!action) { showAlert('Stack kosong, tidak ada yang bisa di-undo!', 'danger'); return; }
+  if (action.type === 'INSERT') {
+    const node = ll.toArray().find(n => n.service === action.service);
+    if (node) { ll.delete(node.id); showAlert(`Undo: Akun "${action.service}" dihapus.`, 'success'); }
+  } else if (action.type === 'DELETE') {
+    if (action.node) {
+      action.node.next = ll.head;
+      ll.head = action.node;
+      ll.size++;
+      showAlert(`Undo: Akun "${action.service}" dikembalikan!`, 'success');
+    }
+  } else if (action.type === 'EDIT') {
+    const node = ll.toArray().find(n => String(n.id) === String(action.nodeId));
+    if (node) { node.password = action.oldPass; showAlert(`Undo: Password "${action.service}" dikembalikan!`, 'success'); }
+  }
+  renderAll();
+}
+
+function clearStack() {
+  if (!confirm('Hapus semua riwayat di Stack?')) return;
+  undoStack.items = [];
+  renderStack();
+  showAlert('Stack dibersihkan.', 'success');
+}
+
+function searchNode() {
+  const q = document.getElementById('in-search').value.trim();
+  const el = document.getElementById('search-result');
+  if (!q) { el.innerHTML = ''; return; }
+  const res = ll.search(q);
+  if (!res.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:1rem 0"><i class="ti ti-search-off" style="font-size:24px;margin-bottom:6px"></i>Tidak ditemukan dalam Linked List.</div>';
+    return;
+  }
+  el.innerHTML = res.map(n => {
+    const c = catConfig[n.category] || catConfig.other;
+    return `<div class="entry-item">
+      <div class="entry-avatar" style="background:${c.bg};color:${c.color}">${getInitial(n.service)}</div>
+      <div class="entry-info">
+        <div class="entry-name">${escHtml(n.service)} <span class="badge" style="background:${c.bg};color:${c.color}">${c.label}</span></div>
+        <div class="entry-meta">${escHtml(n.username)}</div>
+        <div class="entry-enc">Encrypted: ${escHtml(n.password)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function generatePass() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*';
+  let pass = '';
+  for (let i = 0; i < 14; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+  const inp = document.getElementById('in-pass');
+  inp.value = pass;
+  inp.type = 'text';
+  checkStrength();
+}
+
+function checkStrength() {
+  const p = document.getElementById('in-pass').value;
+  const wrap = document.getElementById('strength-wrap');
+  if (!p) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  let score = 0;
+  if (p.length >= 8) score++;
+  if (p.length >= 12) score++;
+  if (/[A-Z]/.test(p)) score++;
+  if (/[0-9]/.test(p)) score++;
+  if (/[^A-Za-z0-9]/.test(p)) score++;
+  const labels = ['Sangat Lemah', 'Lemah', 'Cukup', 'Kuat', 'Sangat Kuat'];
+  const colors = ['#f87171', '#fbbf24', '#fbbf24', '#34d399', '#10b981'];
+  document.getElementById('strength-label').textContent = labels[Math.min(score, 4)];
+  document.getElementById('strength-label').style.color = colors[Math.min(score, 4)];
+  const fill = document.getElementById('strength-fill');
+  fill.style.width = ((score / 5) * 100) + '%';
+  fill.style.background = colors[Math.min(score, 4)];
+}
+
+function showTab(id) {
+  const pages = ['list', 'add', 'search', 'undo', 'viz'];
+  pages.forEach(p => { const el = document.getElementById('page-' + p); if (el) el.style.display = 'none'; });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const target = document.getElementById('page-' + id);
+  if (target) target.style.display = 'block';
+  const idx = pages.indexOf(id);
+  const tabs = document.querySelectorAll('.tab');
+  if (tabs[idx]) tabs[idx].classList.add('active');
+  if (id === 'viz') renderViz();
+}
+
+function toggleReveal(btn) {
+  const id = btn.dataset.id;
+  const enc = btn.dataset.enc;
+  const showing = btn.dataset.showing === 'true';
+  const valEl = document.getElementById('encval-' + id);
+  if (!valEl) return;
+  if (!showing) {
+    valEl.className = 'enc-plain';
+    valEl.textContent = decrypt(enc);
+    btn.dataset.showing = 'true';
+    btn.classList.add('active');
+    btn.title = 'Sembunyikan password';
+    btn.innerHTML = '<i class="ti ti-eye-off"></i>';
+  } else {
+    valEl.className = 'enc-val';
+    valEl.textContent = enc;
+    btn.dataset.showing = 'false';
+    btn.classList.remove('active');
+    btn.title = 'Lihat password asli';
+    btn.innerHTML = '<i class="ti ti-eye"></i>';
+  }
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// INIT — demo data
+// ============================================================
+ll.insert('Gmail', 'user@gmail.com', 'Gmail@2024!', 'email');
+ll.insert('Instagram', 'user_insta', 'Insta#Secure9', 'sosmed');
+ll.insert('BCA Mobile', 'user_bca', 'BcaBank$321', 'finance');
+undoStack.push({ type: 'INSERT', service: 'Gmail', time: '08:00:00' });
+undoStack.push({ type: 'INSERT', service: 'Instagram', time: '08:01:00' });
+undoStack.push({ type: 'INSERT', service: 'BCA Mobile', time: '08:02:00' });
+renderAll();
+</script>
+</body>
+</html>
